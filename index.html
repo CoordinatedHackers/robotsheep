@@ -1,0 +1,117 @@
+<html>
+<style>body{margin: 0}</style>
+<canvas width="500" height="500" id="stage">
+</canvas>
+<script>
+var ctx = stage.getContext('2d');
+var robits = [];
+var walls = [];
+
+var attractors = [];
+
+function Robit(x, y){
+	this.x = x;
+	this.y = y;
+}
+Robit.WIDTH = 5;
+Robit.HEIGHT = 5;
+Robit.prototype.draw = function(){
+	ctx.fillRect(this.x, this.y, Robit.WIDTH, Robit.HEIGHT);
+};
+Robit.prototype.tick = function(){
+	this.x += Math.random() * 10 - 5;
+	this.y += Math.random() * 10 - 5;
+
+	attractors.forEach(function(a){
+		if (!a.active) { return; }
+		var dx = a.x - this.x;
+		var dy = a.y - this.y;
+		// var distance = Math.sqrt(
+		// 	Math.pow(dx, 2) + Math.pow(dy, 2)
+		// );
+		this.x += 2 * Math.sin(Math.atan2(dx, dy));
+		this.y += 2 * Math.cos(Math.atan2(dx, dy));
+	}.bind(this));
+	if (this.x > 500) {
+		this.x = 500;
+	} else if (this.x < 0) {
+		this.x = 0;
+	}
+	if (this.y > 500) {
+		this.y = 500;
+	} else if (this.y < 0) {
+		this.y = 0;
+	}
+}
+
+function Wall(x1, y1, x2, y2) {
+	this.x1 = x1;
+	this.y1 = y1;
+	this.x2 = x2;
+	this.y2 = y2;
+}
+
+Wall.prototype.draw = function() {
+	ctx.lineWidth = 10;
+	ctx.strokeStyle = "rgb(255,0,0)";
+	ctx.beginPath();
+	ctx.moveTo(this.x1, this.y1);
+	ctx.lineTo(this.x2, this.y2);
+	ctx.stroke();
+}
+
+var MouseHandler = {
+	active: false,
+	x: 0, y: 0,
+
+	mousemove: function(e){
+		// attractRobits(e.x, e.y);
+		this.x = e.x;
+		this.y = e.y;
+	},
+	setup: function(){
+		var listener = this.mousemove.bind(MouseHandler);
+
+		stage.addEventListener("mousedown", function(e){
+			this.active = true;
+			this.mousemove(e);
+			window.addEventListener("mousemove", listener);
+		}.bind(this));
+		window.addEventListener("mouseup", function (){
+			this.active = false;
+			window.removeEventListener("mousemove", listener);
+		}.bind(this));
+
+		attractors.push(this);
+	}
+}
+function init() {
+	for (var i = 0; i < 50; i++) {
+		robits.push(new Robit(i * 10, i * 10));
+	}
+	walls.push(new Wall(10, 100, 400, 100));
+	ctx.fillStyle = "rgb(0,0,0)";
+	MouseHandler.setup();
+	draw();
+}
+
+function attractRobits(x, y){
+	console.log(x, y);
+}
+
+
+function draw(){
+	ctx.fillStyle = "rgba(255, 255, 255, 0.05)"
+	ctx.fillRect(0,0,500, 500);
+	ctx.fillStyle = "rgb(0,0,0)";
+	walls.forEach(function(wall) { wall.draw(); });
+	robits.forEach(function(robit) {
+		robit.tick();
+		robit.draw();
+	});
+
+	window.requestAnimationFrame(draw);
+}
+init();
+</script>
+</html>
