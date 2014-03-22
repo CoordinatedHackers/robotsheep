@@ -2,6 +2,11 @@
 <style>body{margin: 0}</style>
 <canvas width="500" height="500" id="stage">
 </canvas>
+<p style="margin: 1em;">
+	<button type=button id=step>►</button>
+	<button type=button id=clickHold>►►</button>
+	<label><input type=checkbox checked id=gogogo> ►►►</label>
+</p>
 <script>
 var ctx = stage.getContext('2d');
 var robits = [];
@@ -92,13 +97,11 @@ function init() {
 	walls.push(new Wall(10, 100, 400, 100));
 	ctx.fillStyle = "rgb(0,0,0)";
 	MouseHandler.setup();
-	draw();
 }
 
 function attractRobits(x, y){
 	console.log(x, y);
 }
-
 
 function draw(){
 	ctx.fillStyle = "rgba(255, 255, 255, 0.05)"
@@ -109,9 +112,47 @@ function draw(){
 		robit.tick();
 		robit.draw();
 	});
-
-	window.requestAnimationFrame(draw);
 }
 init();
+
+function Runner(cb) {
+	this.cb = cb;
+}
+
+Runner.prototype.start = function() {
+	draw();
+	this.req = requestAnimationFrame(this.start.bind(this));
+};
+
+Runner.prototype.stop = function(){
+	if (!('req' in this)) return;
+	cancelAnimationFrame(this.req);
+	delete this.req;
+};
+
+var checkboxRunner = new Runner(draw);
+
+document.getElementById('gogogo').addEventListener('change', function(){
+	if (this.checked) checkboxRunner.start();
+	else checkboxRunner.stop();
+});
+
+checkboxRunner.start();
+
+document.getElementById('step').addEventListener('click', function(){
+	draw();
+});
+
+var clickHoldRunner = new Runner(draw);
+
+clickHold.addEventListener('mousedown', function(){
+	clickHoldRunner.start();
+});
+
+clickHold.addEventListener('mouseup', function(){
+	clickHoldRunner.stop();
+});
+
+
 </script>
 </html>
